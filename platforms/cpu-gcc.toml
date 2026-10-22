@@ -1,0 +1,8 @@
+name = "cpu-gcc"
+cxx = "g++"
+cxxflags = ["-std=c++17", "-O3", "-march=native", "-fopenmp"]
+ldflags = ["-fopenmp"]
+openmp = true
+mpi = true
+charm = true
+cuda = false

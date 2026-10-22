@@ -1,0 +1,9 @@
+name = "mpi-clang"
+cxx = "clang++"
+mpicxx = "mpicxx"
+cxxflags = ["-std=c++17", "-O2"]
+ldflags = []
+openmp = false
+mpi = true
+charm = false
+cuda = false

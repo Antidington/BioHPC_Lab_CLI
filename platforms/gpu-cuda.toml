@@ -1,0 +1,12 @@
+name = "gpu-cuda"
+cxx = "g++"
+mpicxx = "mpicxx"
+charmc = "charmc"
+nvcc = "nvcc"
+cxxflags = ["-std=c++17", "-O3", "-march=native", "-fopenmp"]
+ldflags = ["-fopenmp"]
+cuda_arch = "sm_80"
+openmp = true
+mpi = true
+charm = true
+cuda = true

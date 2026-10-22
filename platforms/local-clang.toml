@@ -1,0 +1,8 @@
+name = "local-clang"
+cxx = "c++"
+cxxflags = ["-std=c++17", "-O2"]
+ldflags = []
+openmp = false
+mpi = false
+charm = false
+cuda = false

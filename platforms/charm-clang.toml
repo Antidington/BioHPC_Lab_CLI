@@ -1,0 +1,9 @@
+name = "charm-clang"
+cxx = "clang++"
+charmc = "charmc"
+cxxflags = ["-std=c++17", "-O2"]
+ldflags = []
+openmp = false
+mpi = false
+charm = true
+cuda = false

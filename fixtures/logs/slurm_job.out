@@ -1,0 +1,3 @@
+2026-10-22T10:00:01Z slurmstepd: error: Detected 1 oom-kill event(s) in StepId=9001.batch
+2026-10-22T10:00:02Z slurmd[123]: error: job 9001 exceeded memory limit
+2026-10-22T10:00:03Z slurmstepd: error: Some of your processes may have been killed

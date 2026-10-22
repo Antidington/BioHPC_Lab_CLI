@@ -1,0 +1,4 @@
+{"event": "run_start", "host": "node01", "job_id": "fault-001", "level": "info", "message": "", "params": {"app": "kmer", "comm": "local", "device": "cpu", "input_bytes": "3216", "k": "15", "layout": "aos8", "ranks": "1"}, "source": "app", "ts": "2026-10-22T10:00:00Z"}
+{"event": "phase_end", "host": "node01", "job_id": "fault-001", "level": "info", "message": "", "params": {"kmers": "3118", "phase": "count", "seconds": "0.71"}, "source": "app", "ts": "2026-10-22T10:00:00Z"}
+{"event": "error", "host": "node01", "job_id": "fault-001", "level": "error", "message": "CUDA out of memory while allocating k-mer table", "params": {"code": "OOM", "exit_code": "137"}, "source": "app", "ts": "2026-10-22T10:00:00Z"}
+{"event": "run_end", "host": "node01", "job_id": "fault-001", "level": "error", "message": "", "params": {"duration_s": "3.4", "exit_code": "137", "output": "counts.tsv", "peak_rss_mb": "1900.0"}, "source": "app", "ts": "2026-10-22T10:00:00Z"}

@@ -1,0 +1,2 @@
+Oct 22 10:00:01 node01 kernel: Out of memory: Killed process 4242 (bhlab-kmer)
+Oct 22 10:00:02 node01 kernel: oom_reaper: reaped process 4242

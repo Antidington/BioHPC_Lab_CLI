@@ -1,0 +1,3 @@
+{"event": "run_start", "host": "node01", "job_id": "normal-000", "level": "info", "message": "", "params": {"app": "kmer", "comm": "local", "device": "cpu", "input_bytes": "3216", "k": "15", "layout": "aos8", "ranks": "1"}, "source": "app", "ts": "2026-10-22T10:00:00Z"}
+{"event": "phase_end", "host": "node01", "job_id": "normal-000", "level": "info", "message": "", "params": {"kmers": "3120", "phase": "count", "seconds": "0.6580743403347026"}, "source": "app", "ts": "2026-10-22T10:00:00Z"}
+{"event": "run_end", "host": "node01", "job_id": "normal-000", "level": "info", "message": "", "params": {"duration_s": "0.6580743403347026", "exit_code": "0", "output": "counts.tsv", "peak_rss_mb": "23.632687675887855"}, "source": "app", "ts": "2026-10-22T10:00:00Z"}

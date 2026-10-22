@@ -25,6 +25,21 @@ Project-specific workflow permissions belong with the commands in
 targets, and permitted effects only after they are established. This scaffold
 does not establish that tests are isolated or authorize external writes.
 
+## Repository invariants
+
+- Same input, app, and `k` must produce the same output checksum across `aos8`
+  and `soa2`, and across local and MPI. Add or update a test when that can break.
+- Every run path emits the `LogEvent` schema. The schema is documented in
+  `docs/reference/log-schema.md`.
+- Backend selection lives only in `src/bhlab/planner.py`. Do not branch on
+  communication or device inside commands.
+- The tool never submits Slurm jobs. It may write a script with `--emit-slurm`
+  and read Slurm logs.
+- Do not add a scheduler, a web console, a custom MPI runtime, or a machine
+  learning model. The scope document owns the exclusions.
+- The generated Makefile is the build contract. A new platform is a TOML profile,
+  not a second build system.
+
 ## Completion
 
 For implementation, continue within the authorized scope through applicable checks,

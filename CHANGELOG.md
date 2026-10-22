@@ -1,13 +1,16 @@
 # Changelog
 
-All notable released changes to this project are documented here.
+## 0.1.0
 
-## Unreleased
-
-### Added
-
-### Changed
-
-### Fixed
-
-### Removed
+- Add the `bhlab` CLI with init, doctor, dependency probe, build, codegen, run,
+  bench, log, baseline, watch, alert, and demo commands.
+- Add the C++17 k-mer and minimizer core with `aos8` and `soa2` layouts.
+- Add the MPI and Charm++ drivers with a hash-partitioned k-mer shuffle and
+  serial comparison.
+- Add local CPU, MPI, and Charm++ code generation. All three generated drivers
+  are verified, including a two-PE Charm++ run through `prterun`.
+- Add generated Makefiles for local, MPI, CPU GCC, and CUDA profiles.
+- Add SQLite log normalization for application, Slurm, and syslog sources.
+- Add robust baselines, keyword rules, baseline deviation, exit code, silence,
+  and retry rules.
+- Add fault replay, alert evidence, and the acceptance demo.

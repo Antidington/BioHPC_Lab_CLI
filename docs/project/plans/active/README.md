@@ -1,48 +1,44 @@
 # Active Plans
 
-Use one plan for work with multiple dependent steps, meaningful risk, or a
-need to resume across sessions. Small changes can be handled without a plan
-file. Name plans descriptively, for example `YYYY-MM-DD-topic.md`.
+## Cluster verification for CUDA and multi-node runs
 
-## Plan template
+- Status: Active
+- Owner: BioHPC Lab
+- Created: 2026-10-22
 
-```markdown
-# Plan: <outcome>
+The local CPU, two-rank MPI, and two-PE Charm++ paths are verified. This plan
+closes the remaining CUDA and multi-node gaps. It is not an implementation plan
+for new features.
 
-- State: Proposed | Active | Blocked | Completed | Cancelled | Superseded
-- Owner: TODO
-- Last updated: YYYY-MM-DD
-- Related requirements / ADRs: TODO
+### Steps
 
-## Objective and boundaries
-State the requested outcome, authorized scope, and non-goals.
+1. Load the site modules for GCC, Open MPI, Charm++, CUDA, zlib, libdeflate,
+   bzip2, lzma, and htslib. Run `bhlab doctor` and save the JSON output.
+2. Build `cpu-gcc` on a CPU login node. Record the generated Makefile and
+   `config.cpu-gcc.mk`.
+3. Run the k-mer app on two nodes with `mpirun`. Use `--verify-shuffle` and
+   compare the SHA-256 to a single-rank run. Save `bench.csv` and the events.
+4. Build `gpu-cuda` on a GPU node. Set `cuda_arch` in
+   `platforms/gpu-cuda.toml` to the device capability. Run the same input with
+   `--device gpu --layout soa2`. Compare the checksum to the CPU run.
+5. Run the local Charm++ checksum on the cluster. The local build already
+   passes with two PEs, so this step confirms the cluster launcher and runtime.
+6. Run `bhlab demo acceptance --full` and archive `evidence/<timestamp>/`.
+7. Update `docs/project/status.md` with the commands, checksums, and any
+   remaining gaps.
 
-## Context and decisions
-Separate confirmed facts, agreed decisions, assumptions, and open questions.
-Record an approval only when actually given, including its action and target.
+### Evidence to keep
 
-## Acceptance criteria
-Define observable success and the checks required by
-[CONTRIBUTING.md](../../../../CONTRIBUTING.md) for this task.
+- `doctor --json`
+- `Makefile.cpu-gcc`, `config.cpu-gcc.mk`
+- `Makefile.gpu-cuda`, `config.gpu-cuda.mk`
+- `bench.csv` and `manifest.json`
+- MPI and Charm++ event logs with `verify.match=1`
+- The GPU checksum comparison
+- The final `SUMMARY.md`
 
-## Steps and verification
-- [ ] Step with an observable result and relevant check.
+### Stop condition
 
-## Risks and dependencies
-List only concrete risks, dependencies, and applicable approval boundaries.
-Note which independent work can continue while a dependency is unresolved.
-
-## Resume checkpoint
-- Completed work and evidence: TODO
-- Remaining work / blocker: TODO
-- Next action: TODO
-- Unrun checks and reason: TODO
-
-## Outcome
-Record results against the acceptance criteria, validation, and remaining limits.
-```
-
-Update checkpoints at meaningful changes, not after every tool call. Preserve
-settled decisions; recheck volatile evidence when resuming. Move finished,
-cancelled, or superseded plans to [archive](../archive/README.md), and update
-links in status and roadmap. Keep unresolved follow-up work explicitly linked.
+Stop when the status page has one verified row for two-node CPU, GPU, and
+Charm++, or when a cluster limitation is recorded with the exact failing command
+and error.

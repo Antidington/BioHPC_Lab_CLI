@@ -1,53 +1,84 @@
 # Contributing
 
-## Development setup
+## Set up
 
-This is the canonical guide to contributor commands and checks. Keep end-user
-usage in [README.md](README.md). Obtain commands from manifests, scripts, and CI;
-link their definitions so this guide stays consistent with executable configuration.
+Use `uv` for the Python environment.
 
-TODO: Add supported runtimes, prerequisites, and environment setup.
+```sh
+uv sync --extra dev
+uv run bhlab doctor
+```
 
-| Purpose | Command / definition | Working directory / prerequisites | Evidence / last verified |
-|---|---|---|---|
-| Setup | TODO | TODO | Not verified |
-| Focused tests | TODO | TODO | Not verified |
-| Full tests | TODO | TODO | Not verified |
-| Lint / format check | TODO | TODO | Not verified |
-| Build | TODO | TODO | Not verified |
+## Validate
 
-TODOs are not executable commands. Mark an inapplicable check N/A with a reason.
+Run the Python tests first.
 
-## Validation policy
+```sh
+uv run pytest
+```
 
-TODO: Map actual change types to required checks and observable pass conditions.
-Include broader checks only where risk or CI policy requires them. For documentation
-changes, check affected commands, examples, or links as applicable.
+Build the local native core and run its C++ tests.
 
-| Change type / trigger | Required check (from above) | Pass condition |
-|---|---|---|
-| TODO | TODO | TODO |
+```sh
+uv run bhlab build --platform local-clang
+make -f build/Makefile.local-clang check
+```
 
-After applicable checks pass, stop unless a new edit, failure, or unresolved concern
-requires more checking. Record unavailable environments and unrun checks in the task
-result; documentation of a command is not evidence that it passed.
+Run the end-to-end local story.
 
-## Workflow permissions and effects
+```sh
+uv run bhlab demo acceptance
+```
 
-TODO: Document only established project-specific permissions for workflows that
-need them. For each, identify the command, environment, targets, data or network
-effects, allowed repair/retry actions, and any approval boundary with its source.
-Record verified isolation separately from authorization; local execution alone
-does not establish either. An unfinished section does not revoke existing user
-authorization or require approval for ordinary in-scope work.
+For MPI on one host, install Open MPI and build the `mpi-clang` profile.
 
-Keep deployment and recovery procedures in the [runbook](docs/operations/runbook.md).
+```sh
+uv run bhlab build --platform mpi-clang
+mpirun --oversubscribe -np 2 ./build/bin/bhlab-kmer-mpi \
+  --input fixtures/reads/tiny.fq --output /tmp/mpi.tsv \
+  --events /tmp/mpi.jsonl --k 15 --layout aos8 --verify-shuffle
+```
 
-## Making changes
+For Charm++ on one host, put `charmc` on `PATH` and build the `charm-clang`
+profile. Classic Charm++ uses `charmrun`. A reconverse build uses `prterun`.
 
-TODO: Add repository-specific branch, commit, and review expectations.
+```sh
+export PATH=/path/to/charm/bin:$PATH
+uv run bhlab build --platform charm-clang --with-charm
+uv run bhlab run --input fixtures/reads/tiny.fq --output /tmp/charm.tsv \
+  --comm charm --nodes 2 --k 15 --layout aos8
+```
 
-## Pull requests
+## Layout
 
-Describe the problem, resulting behavior, validation performed, and remaining risk
-or follow-up work.
+- `src/bhlab/` is the Python CLI, planner, build generator, code generation, and
+  log pipeline.
+- `native/` is the C++17 core, device backends, and communication drivers.
+- `platforms/` holds build profiles. A profile produces a Makefile, not a
+  second build system.
+- `pipelines/` holds the line-based pipeline DSL.
+- `rules/` holds anomaly rules.
+- `fixtures/` holds deterministic reads and logs.
+- `tests/` holds pytest tests.
+- `docs/` owns user and design documentation.
+
+## Change rules
+
+- Keep the output checksum identical across layouts, communication backends,
+  and devices for the same input and `k`. Add a test when that can break.
+- Every run path emits the same `LogEvent` schema.
+- Auto selection lives only in `src/bhlab/planner.py`. Do not add backend
+  branching inside commands.
+- Do not add a scheduler, a custom MPI runtime, a web console, or a machine
+  learning model. See the scope document for the current exclusions.
+- Update the canonical document when a command, schema, or workflow changes.
+  The [documentation index](docs/index.md) names the owner of each topic.
+
+## Regenerate fixtures
+
+```sh
+uv run python scripts/make_fixtures.py
+```
+
+Fixtures are deterministic. Regenerate them only when the read or log shape
+changes, then update the golden expectations.

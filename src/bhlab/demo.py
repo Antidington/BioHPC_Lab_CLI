@@ -50,6 +50,29 @@ def acceptance(config: Config, full: bool = False) -> Path:
         comm="local", device="cpu", layout="aos8", k=15, window=8, job_id="demo-minimizer",
     ), config)
 
+    caps = detect()
+    backend_checks: dict[str, object] = {}
+    generated: list[Path] = []
+    generated.append(generate(config, config.root / "pipelines" / "kmer_qc.bhl", "local",
+                              config.build / "gen" / "kmer_qc_local.cpp")[0])
+    for comm in ("mpi", "charm"):
+        try:
+            generated.extend(generate(config, config.root / "pipelines" / "kmer_qc.bhl", comm))
+        except Exception as error:
+            if full:
+                raise DemoError(f"code generation failed for {comm}: {error}") from error
+
+    if full and caps.mpi:
+        try:
+            build(config, "mpi-clang")
+        except Exception as error:
+            backend_checks["mpi_build"] = f"unavailable: {error}"
+    if full and caps.charm:
+        try:
+            build(config, "charm-clang", with_charm=True)
+        except Exception as error:
+            backend_checks["charm_build"] = f"unavailable: {error}"
+
     matrix = (
         "comm=local,mpi,charm;device=cpu,gpu;layout=aos8,soa2"
         if full else "comm=local;device=cpu;layout=aos8,soa2"
@@ -59,10 +82,6 @@ def acceptance(config: Config, full: bool = False) -> Path:
         repeat=3 if full else 1, k=15, allow_missing=full,
     )
 
-    generated = []
-    local_source = generate(config, config.root / "pipelines" / "kmer_qc.bhl", "local",
-                            config.build / "gen" / "kmer_qc_local.cpp")[0]
-    generated.append(local_source)
     build(config, "local-clang")
     generated_bin = config.build / "bin" / "kmer_qc"
     if not generated_bin.exists():
@@ -78,19 +97,8 @@ def acceptance(config: Config, full: bool = False) -> Path:
     if generated_result.checksum != kmer.checksum:
         raise DemoError("generated driver checksum differs from the hand-written app")
 
-    for comm in ("mpi", "charm"):
+    if full and caps.mpi and "mpi_build" not in backend_checks:
         try:
-            paths = generate(config, config.root / "pipelines" / "kmer_qc.bhl", comm)
-            generated.extend(paths)
-        except Exception as error:
-            if full:
-                raise DemoError(f"code generation failed for {comm}: {error}") from error
-
-    caps = detect()
-    backend_checks: dict[str, object] = {}
-    if full and caps.mpi:
-        try:
-            build(config, "mpi-clang")
             mpi_bin = config.build / "bin" / "kmer_qc_mpi"
             if mpi_bin.exists():
                 result = _run_or_fail(RunSpec(
@@ -105,9 +113,8 @@ def acceptance(config: Config, full: bool = False) -> Path:
             raise
         except Exception as error:
             backend_checks["mpi"] = f"unavailable: {error}"
-    if full and caps.charm:
+    if full and caps.charm and "charm_build" not in backend_checks:
         try:
-            build(config, "charm-clang", with_charm=True)
             charm_bin = config.build / "bin" / "kmer_qc_charm"
             if charm_bin.exists():
                 result = _run_or_fail(RunSpec(

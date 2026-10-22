@@ -1,0 +1,23 @@
+mainmodule kmer_charm {
+  readonly int g_k;
+  readonly int g_window;
+  readonly int g_layout;
+  readonly int g_device;
+  readonly int g_threads;
+  readonly int g_max_reads;
+  readonly char g_input[4096];
+  readonly char g_output[4096];
+  readonly char g_events[4096];
+  readonly char g_job_id[256];
+  readonly char g_steps[512];
+
+  mainchare main {
+    entry main(CkArgMsg*);
+  };
+
+  array [1D] KmerChare {
+    entry KmerChare();
+    entry void run();
+    entry void merge(CkReductionMsg*);
+  };
+};

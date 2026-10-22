@@ -1,0 +1,7 @@
+# Two domain communication keywords plus a final gather.
+pipeline kmer_qc {
+  input "fixtures/reads/tiny.fq"
+  scatter_reads chunk=1000000
+  shuffle_kmers key=canonical
+  gather_stats
+}

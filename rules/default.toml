@@ -1,0 +1,28 @@
+[[rules]]
+id = "oom"
+type = "keyword"
+severity = "critical"
+keywords = ["oom", "out of memory", "cuda error", "killed"]
+
+[[rules]]
+id = "slow"
+type = "baseline"
+severity = "warning"
+multiplier = 1.5
+
+[[rules]]
+id = "exit"
+type = "exit_code"
+severity = "error"
+
+[[rules]]
+id = "silence"
+type = "silence"
+severity = "warning"
+max_gap_s = 120
+
+[[rules]]
+id = "retry"
+type = "retry"
+severity = "warning"
+max_errors = 3

@@ -146,11 +146,12 @@ exists.**
 
 ## Verification and limitations
 
-The [project status](docs/project/status.md) records local CPU, two-rank MPI,
-and two-PE Charm++ checks on one host, plus generated-driver checks. Those
-records are dated 2026-10-22. Multi-node execution and the CUDA k-mer binary
-remain unverified there; the MPI driver also reads the full input on every rank.
-Use the status page for the scope of the recorded evidence and current gaps.
+The [project status](docs/project/status.md) records functional checks of local
+CPU, two-rank MPI, two-PE Charm++, and CUDA k-mer counting on the designated
+hosts, including generated drivers and both layouts, verified on 2026-11-01.
+Multi-node execution and performance portability remain unverified. The MPI
+driver reads the full input on every rank. Use the status page for the evidence
+scope and known monitoring limitations.
 
 ## Documentation
 

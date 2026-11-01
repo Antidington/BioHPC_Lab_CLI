@@ -2,7 +2,7 @@
 
 - Owner: BioHPC Lab
 - Scaffold created: 2026-10-22
-- Last verified: 2026-10-22
+- Last verified: 2026-10-22; MON-001 recorded 2026-11-01
 
 | Item | Impact | Rationale | Removal trigger |
 |---|---|---|---|
@@ -17,3 +17,17 @@
 | `duration_per_gb` explodes for tiny inputs | Baseline values look large in demos | Keeps one metric across input sizes | Baselines are compared across very different file sizes |
 | Benchmark runs are short | Throughput numbers are functional, not performance claims | The local host is a laptop | The cluster matrix is recorded |
 | Charm++ readonly paths are fixed at 4096 bytes | Very long paths are truncated | Keeps readonly broadcast simple | A real path exceeds the buffer |
+
+## MON-001 Terminal native errors
+
+- Status: Open, observed 2026-11-01.
+- Impact: An error-only native stream is stored but raises no default `exit`
+  alert. The live watcher also does not mark an `error` event as an ended job,
+  so terminal-error handling must be considered when reviewing silence alerts.
+- Cause: Native exceptions emit `error` with `exit_code=1`; the exit-code rule
+  and watcher completion tracking require `run_end`.
+- Evidence: `evidence/gpu-fix-20261030/` retains the masked-device events, raw
+  61/62 GPU result, independent contract review, and read-only ingestion check.
+- Resolution scope: Define a terminal-error event contract and verify alert
+  deduplication and live watcher completion. The CUDA repair preserves the
+  existing event contract and does not change the shared alert engine.

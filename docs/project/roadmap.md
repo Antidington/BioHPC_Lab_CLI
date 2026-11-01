@@ -2,15 +2,16 @@
 
 - Owner: BioHPC Lab
 - Scaffold created: 2026-10-22
-- Last verified: 2026-10-22
+- Last verified: 2026-11-01
 
 ## Now
 
 - Keep the local and MPI acceptance path green. Run `uv run pytest`,
   `make -f build/Makefile.local-clang check`, and
   `uv run bhlab demo acceptance` before each handoff.
-- Finish the CUDA verification on a GPU host. Record the exact commands and
-  checksums under `evidence/`.
+- Keep the verified CUDA path green with the opt-in hardware checks in
+  [CONTRIBUTING.md](../../CONTRIBUTING.md). The designated-host functional
+  results and remaining gaps are in [project status](status.md).
 - Fill the acceptance matrix with real two-node CPU, Charm++, and GPU numbers.
   The local matrix is a functional check, not a performance claim.
 - Keep the generated Makefiles for `cpu-gcc` and `gpu-cuda` in sync with the

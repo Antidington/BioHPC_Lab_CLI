@@ -2,7 +2,7 @@
 
 - Owner: BioHPC Lab
 - Scaffold created: 2026-10-22
-- Last verified: 2026-10-22
+- Last verified: 2026-10-22; CUDA failure handling verified 2026-11-01
 
 ## Check the environment
 
@@ -105,6 +105,24 @@ Write a Slurm script without submitting it:
 uv run bhlab run --input fixtures/reads/tiny.fq --output runs/slurm/counts.tsv \
   --comm mpi --nodes 2 --emit-slurm runs/slurm/job.sbatch
 ```
+
+## CUDA failures
+
+Use the [CUDA hardware checks](../../CONTRIBUTING.md#validate) to build for the
+target architecture and test both layouts on a visible GPU. The designated
+RTX 5060 Ti verification used NVCC 12.8.93 and `sm_120`.
+
+For a nonempty workload with `CUDA_VISIBLE_DEVICES=''`, the repaired binary
+returns nonzero and writes a schema-valid `error` event with `exit_code=1`.
+The CLI records an empty checksum in `run.json`. A fresh output directory has
+no `counts.tsv`, and the native error path emits no successful `run_end`.
+Use fresh output directories when diagnosing failures so old results cannot be
+mistaken for a new successful run.
+
+Replay stores these error events, but the default `exit` rule requires a
+`run_end` event. This error-only stream raises no default exit alert. Track the
+remaining monitoring limitation in
+[MON-001](../engineering/tech-debt.md#mon-001-terminal-native-errors).
 
 ## Generate a driver
 

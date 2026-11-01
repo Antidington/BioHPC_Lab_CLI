@@ -56,5 +56,6 @@ suffix. The MPI binary keeps the `_mpi` suffix.
 - No type checking beyond the keyword list.
 - The pipeline input path is documentation. The runtime input comes from
   `--input`.
-- The Charm++ template is not compiled on the development host. Verify it on a
-  host with `charmc`.
+- Generated MPI and Charm++ drivers have one-host verification only. Real
+  multi-node generated execution remains unverified. See
+  [project status](../project/status.md) for the dated platform evidence.

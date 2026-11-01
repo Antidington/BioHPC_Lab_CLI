@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.1
+
+### Fixed
+
+- Fix `gpu-cuda` header inclusion and dependency tracking in generated Makefiles.
+- Propagate CUDA runtime failures through the native error path and add masked-device regression coverage.
+
+### Planned
+
+- Add MPI node configuration and cross-node regressions, including fixes to native and generated drivers.
+- Add Charm++ node-list configuration and cross-node regressions, including launcher and generated-driver fixes.
+- Extend `gpu-cuda` hardware regressions and representative CPU/GPU benchmarks; fix issues identified during validation.
+
 ## 0.1.0
 
 - Add the `bhlab` CLI with init, doctor, dependency probe, build, codegen, run,

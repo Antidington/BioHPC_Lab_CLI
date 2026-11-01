@@ -49,6 +49,24 @@ uv run bhlab run --input fixtures/reads/tiny.fq --output /tmp/charm.tsv \
   --comm charm --nodes 2 --k 15 --layout aos8
 ```
 
+For CUDA hardware tests, use the designated GPU worktree with a working NVIDIA
+driver, a visible GPU, `nvcc` and `nvidia-smi` on `PATH`, and CUDA runtime
+libraries available to the linker and loader. Install the Python dev dependencies
+and build `build/bin/bhlab-kmer` with the `gpu-cuda` profile first. Select an
+architecture supported by both the GPU and toolkit. The RTX 5060 Ti uses
+`sm_120` and requires a toolkit that supports it, such as CUDA 12.8.
+
+```sh
+MAKEFLAGS='-B CUDA_ARCH=sm_120' uv run bhlab build --platform gpu-cuda
+BHLAB_TEST_CUDA=1 uv run pytest tests/test_cuda.py
+```
+
+These tests compare CPU and GPU counts with an independent reference for both
+layouts and require a nonzero exit when CUDA devices are masked. They create
+fresh temporary outputs and do not build binaries. Ordinary `pytest` skips
+hardware cases without probing the GPU. Once opted in, missing prerequisites
+or a nonfunctional CUDA binary fail the tests.
+
 ## Layout
 
 - `src/bhlab/` is the Python CLI, planner, build generator, code generation, and

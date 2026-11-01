@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include <thrust/copy.h>
@@ -17,6 +18,38 @@
 
 namespace bhlab {
 namespace {
+
+void check_cuda(cudaError_t status, const char* operation) {
+  if (status != cudaSuccess) {
+    throw std::runtime_error(std::string(operation) + ": " + cudaGetErrorString(status));
+  }
+}
+
+template <typename T>
+class DeviceBuffer {
+ public:
+  explicit DeviceBuffer(std::size_t count) {
+    check_cuda(cudaMalloc(&data_, count * sizeof(T)), "cudaMalloc");
+  }
+
+  DeviceBuffer(const DeviceBuffer&) = delete;
+  DeviceBuffer& operator=(const DeviceBuffer&) = delete;
+
+  ~DeviceBuffer() noexcept {
+    if (data_) cudaFree(data_);
+  }
+
+  T* get() const noexcept { return data_; }
+
+  void release_checked() {
+    T* data = data_;
+    data_ = nullptr;
+    if (data) check_cuda(cudaFree(data), "cudaFree");
+  }
+
+ private:
+  T* data_ = nullptr;
+};
 
 __device__ uint64_t reverse_complement_device(uint64_t kmer, int k) {
   uint64_t out = 0;
@@ -71,31 +104,31 @@ std::vector<KmerCount> count_kmers_gpu(const SeqBatch& input, int k) {
   const std::size_t max_kmers = batch.total_bases();
   if (max_kmers == 0) return {};
 
-  uint64_t* d_packed = nullptr;
-  uint32_t* d_offsets = nullptr;
-  uint32_t* d_lengths = nullptr;
-  uint64_t* d_out = nullptr;
-  unsigned int* d_count = nullptr;
-  cudaMalloc(&d_packed, flat.size() * sizeof(uint64_t));
-  cudaMalloc(&d_offsets, offsets.size() * sizeof(uint32_t));
-  cudaMalloc(&d_lengths, lengths.size() * sizeof(uint32_t));
-  cudaMalloc(&d_out, max_kmers * sizeof(uint64_t));
-  cudaMalloc(&d_count, sizeof(unsigned int));
-  cudaMemcpy(d_packed, flat.data(), flat.size() * sizeof(uint64_t), cudaMemcpyHostToDevice);
-  cudaMemcpy(d_offsets, offsets.data(), offsets.size() * sizeof(uint32_t), cudaMemcpyHostToDevice);
-  cudaMemcpy(d_lengths, lengths.data(), lengths.size() * sizeof(uint32_t), cudaMemcpyHostToDevice);
-  cudaMemset(d_count, 0, sizeof(unsigned int));
+  DeviceBuffer<uint64_t> d_packed(flat.size());
+  DeviceBuffer<uint32_t> d_offsets(offsets.size());
+  DeviceBuffer<uint32_t> d_lengths(lengths.size());
+  DeviceBuffer<uint64_t> d_out(max_kmers);
+  DeviceBuffer<unsigned int> d_count(1);
+  check_cuda(cudaMemcpy(d_packed.get(), flat.data(), flat.size() * sizeof(uint64_t),
+                        cudaMemcpyHostToDevice), "cudaMemcpy packed H2D");
+  check_cuda(cudaMemcpy(d_offsets.get(), offsets.data(), offsets.size() * sizeof(uint32_t),
+                        cudaMemcpyHostToDevice), "cudaMemcpy offsets H2D");
+  check_cuda(cudaMemcpy(d_lengths.get(), lengths.data(), lengths.size() * sizeof(uint32_t),
+                        cudaMemcpyHostToDevice), "cudaMemcpy lengths H2D");
+  check_cuda(cudaMemset(d_count.get(), 0, sizeof(unsigned int)), "cudaMemset count");
 
   const int threads = 128;
   const int blocks = static_cast<int>((batch.size() + threads - 1) / threads);
-  emit_kmers<<<blocks, threads>>>(d_packed, d_offsets, d_lengths,
-                                  static_cast<int>(batch.size()), k, d_out, d_count);
+  emit_kmers<<<blocks, threads>>>(d_packed.get(), d_offsets.get(), d_lengths.get(),
+                                  static_cast<int>(batch.size()), k, d_out.get(), d_count.get());
+  check_cuda(cudaGetLastError(), "emit_kmers launch");
 
   unsigned int count = 0;
-  cudaMemcpy(&count, d_count, sizeof(unsigned int), cudaMemcpyDeviceToHost);
+  check_cuda(cudaMemcpy(&count, d_count.get(), sizeof(unsigned int), cudaMemcpyDeviceToHost),
+             "cudaMemcpy count D2H");
   std::vector<KmerCount> result;
   if (count > 0) {
-    thrust::device_vector<uint64_t> keys(d_out, d_out + count);
+    thrust::device_vector<uint64_t> keys(d_out.get(), d_out.get() + count);
     thrust::sort(keys.begin(), keys.end());
     thrust::device_vector<uint64_t> unique_keys(count);
     thrust::device_vector<uint32_t> unique_counts(count);
@@ -111,11 +144,11 @@ std::vector<KmerCount> count_kmers_gpu(const SeqBatch& input, int k) {
     for (std::size_t i = 0; i < unique; ++i) result.push_back({host_keys[i], host_counts[i]});
   }
 
-  cudaFree(d_packed);
-  cudaFree(d_offsets);
-  cudaFree(d_lengths);
-  cudaFree(d_out);
-  cudaFree(d_count);
+  d_packed.release_checked();
+  d_offsets.release_checked();
+  d_lengths.release_checked();
+  d_out.release_checked();
+  d_count.release_checked();
   return result;
 }
 

@@ -113,7 +113,7 @@ $(LOCAL_OBJ)/apps/%.o: native/apps/%.cpp
 
 $(LOCAL_OBJ)/device/%.o: native/src/device/%.cu
 	@mkdir -p $(dir $@)
-	$(NVCC) -std=c++17 -O3 -arch=$(CUDA_ARCH) $(LOCAL_DEFS) -c $< -o $@
+	$(NVCC) -std=c++17 -O3 -I native/include -MMD -MP -arch=$(CUDA_ARCH) $(LOCAL_DEFS) -c $< -o $@
 
 $(BINDIR)/%: build/gen/%_local.cpp $(LOCAL_CORE_OBJS)
 	@mkdir -p $(BINDIR)

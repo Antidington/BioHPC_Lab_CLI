@@ -1,0 +1,23 @@
+name: bhlab-depns
+channels:
+  - ./build/conda-channel
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - bhlab-charmpp=8.0.0
+  - openmpi
+  - pkg-config
+  - make
+  - clangxx=19
+  - zlib
+  - libdeflate
+  - bzip2
+  - xz
+  - htslib
+  - cmake
+  - ninja
+  - cuda-nvcc=12.8
+  - cuda-cudart-dev=12.8
+  - cuda-cccl=12.8
+  - cuda-driver-dev=12.8

@@ -1,0 +1,41 @@
+{% set version = "8.0.0" %}
+
+package:
+  name: bhlab-charmpp
+  version: {{ version }}
+
+source:
+  url:
+    - https://codeload.github.com/charmplusplus/charm/tar.gz/refs/tags/v{{ version }}
+    - https://github.com/charmplusplus/charm/archive/refs/tags/v{{ version }}.tar.gz
+  fn: charm-v{{ version }}.tar.gz
+  sha256: e30fc1e921e5cbf3406e792d5b0ca5f211c5d8ffbfc56e56d5501d8118abcaf6
+
+build:
+  number: 1
+  skip: true  # [not linux64]
+
+requirements:
+  build:
+    - cmake <4
+    - make
+    - gcc >=14,<15
+    - gxx >=14,<15
+    - python
+  host:
+    - zlib
+  run:
+    - gcc >=14,<15
+    - gxx >=14,<15
+    - zlib
+
+test:
+  source_files:
+    - examples/charm++/hello/1darray/hello.C
+    - examples/charm++/hello/1darray/hello.ci
+
+about:
+  home: https://charmplusplus.org/
+  license: Apache-2.0
+  license_file: LICENSE
+  summary: Charm++ compiler and netlrts runtime for BioHPC Lab

@@ -12,13 +12,50 @@ scheduler or a production platform.
 
 ## Getting started
 
-For the local CPU example, install `uv` and use
-Python 3.10 or newer, a C++17 compiler, and zlib. Run the commands from the
-repository root:
+Common prerequisites for all build profiles:
+
+- Python 3.10 or newer and `uv` for the CLI and Python dependencies.
+- GNU Make, a C++17 compiler, and zlib development headers and libraries for
+  the native build.
+
+Install the compiler and backend components required by your selected profile:
+
+| Build profile | Compiler and backend requirements |
+| --- | --- |
+| Local CPU (`local-clang`) | A C++17 compiler available as `c++`. |
+| CPU with OpenMP (`cpu-gcc`) | `g++` with OpenMP support and its runtime. |
+| MPI (`mpi-clang`) | `clang++`, an MPI compiler wrapper `mpicxx`, and `mpirun` on `PATH`. |
+| Charm++ (`charm-clang`) | `clang++`, `charmc`, and a matching `charmrun` or `prterun` launcher. |
+| CUDA (`gpu-cuda`) | An NVCC-compatible `g++` with OpenMP support and its runtime, CUDA toolkit and runtime libraries, a visible GPU, and `nvcc` and `nvidia-smi` on `PATH`. |
+
+Clone the repository and run the remaining commands from its root:
 
 ```sh
 git clone https://github.com/Antidington/BioHPC_Lab_CLI.git
 cd BioHPC_Lab_CLI
+```
+
+Optionally create an environment from the provided [mamba YAML](environment.yml).
+It includes GNU Make, GCC, Clang 19, Charm++, Open MPI, CUDA 12.8 build components,
+and the external libraries.
+Skip this step if your existing environment already provides the dependencies.
+The helper first builds the local Charm++ package consumed by mamba.
+
+```sh
+bash scripts/build_charm_conda.sh
+mamba env create --prefix "$PWD/build/_deps/bhlab-depns" -f environment.yml
+mamba activate "$PWD/build/_deps/bhlab-depns"
+export PKG_CONFIG_PATH="$CONDA_PREFIX/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+export LD_LIBRARY_PATH="$CONDA_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+```
+
+The `bhlab-depns` prefix belongs to the current worktree. Create a separate prefix in
+each worktree used for testing.
+
+See [environment setup](CONTRIBUTING.md#set-up) for details. Install the Python
+dependencies with `uv`, then check the environment and build the local CPU example:
+
+```sh
 uv sync --extra dev
 uv run bhlab doctor
 uv run bhlab build --platform local-clang

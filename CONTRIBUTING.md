@@ -2,6 +2,26 @@
 
 ## Set up
 
+Create the shared native tools environment.
+[environment.yml](environment.yml) combines the direct dependencies from the
+CPU and CUDA test environments and adds Charm++ as a local Conda package.
+It includes GNU Make, GCC, Clang 19, Open MPI, the five external libraries,
+pkg-config, CMake, Ninja, and CUDA 12.8. Mamba resolves their transitive dependencies.
+This file also installs the CUDA build components on a CPU-only host.
+
+```sh
+bash scripts/build_charm_conda.sh
+mamba env create --prefix "$PWD/build/_deps/bhlab-depns" -f environment.yml
+mamba activate "$PWD/build/_deps/bhlab-depns"
+export PKG_CONFIG_PATH="$CONDA_PREFIX/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+export LD_LIBRARY_PATH="$CONDA_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+```
+
+The helper builds Charm++ 8.0.0 into `build/conda-channel`. Mamba installs and
+tracks that package with the rest of the environment. Rebuild it on each host.
+Use a fresh worktree and its own `build/_deps/bhlab-depns` prefix for each test session.
+GCC 14 and Clang 19 keep the host compilers within the CUDA 12.8 compatibility range.
+
 Use `uv` for the Python environment.
 
 ```sh
@@ -11,7 +31,7 @@ uv run bhlab doctor
 
 ## Validate
 
-Run the Python tests first.
+Activate the worktree's `bhlab-depns` environment and run the Python tests first.
 
 ```sh
 uv run pytest
@@ -39,25 +59,30 @@ mpirun --oversubscribe -np 2 ./build/bin/bhlab-kmer-mpi \
   --events /tmp/mpi.jsonl --k 15 --layout aos8 --verify-shuffle
 ```
 
-For Charm++ on one host, put `charmc` on `PATH` and build the `charm-clang`
-profile. Classic Charm++ uses `charmrun`. A reconverse build uses `prterun`.
+For Charm++ on one host, activate the tools environment and build the
+`charm-clang` profile. The provided Charm++ package uses `charmrun`.
+Use `++local` to launch both PEs on the current host.
 
 ```sh
-export PATH=/path/to/charm/bin:$PATH
 uv run bhlab build --platform charm-clang --with-charm
-uv run bhlab run --input fixtures/reads/tiny.fq --output /tmp/charm.tsv \
-  --comm charm --nodes 2 --k 15 --layout aos8
+charmrun ++local +p2 ./build/bin/bhlab-kmer-charm \
+  --input fixtures/reads/tiny.fq --output /tmp/charm.tsv \
+  --events /tmp/charm.jsonl --device cpu --k 15 --layout aos8
 ```
 
-For CUDA hardware tests, use the designated GPU worktree with a working NVIDIA
-driver, a visible GPU, `nvcc` and `nvidia-smi` on `PATH`, and CUDA runtime
+For CUDA hardware tests, use the designated GPU worktree with a visible GPU,
+`nvcc` and `nvidia-smi` on `PATH`, and CUDA runtime
 libraries available to the linker and loader. Install the Python dev dependencies
 and build `build/bin/bhlab-kmer` with the `gpu-cuda` profile first. Select an
 architecture supported by both the GPU and toolkit. The RTX 5060 Ti uses
 `sm_120` and requires a toolkit that supports it, such as CUDA 12.8.
 
+When Open MPI and CUDA are both detected, build the `local` target for these
+tests to avoid the [MPI and CUDA link gap](docs/engineering/tech-debt.md#bld-001-mpi-and-cuda-linking).
+
 ```sh
-MAKEFLAGS='-B CUDA_ARCH=sm_120' uv run bhlab build --platform gpu-cuda
+uv run bhlab build --platform gpu-cuda --emit-only
+make -B -f build/Makefile.gpu-cuda local CUDA_ARCH=sm_120
 BHLAB_TEST_CUDA=1 uv run pytest tests/test_cuda.py
 ```
 

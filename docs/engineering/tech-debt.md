@@ -18,6 +18,20 @@
 | Benchmark runs are short | Throughput numbers are functional, not performance claims | The local host is a laptop | The cluster matrix is recorded |
 | Charm++ readonly paths are fixed at 4096 bytes | Very long paths are truncated | Keeps readonly broadcast simple | A real path exceeds the buffer |
 
+## BLD-001 MPI and CUDA linking
+
+- Status: Open, identified by source inspection on 2026-11-05.
+- Impact: With MPI and CUDA both detected, the `gpu-cuda` profile enables both
+  backends and its default build includes an MPI target with a missing CUDA symbol.
+- Cause: The [Makefile generator](../../src/bhlab/deps.py) enables the CUDA macro
+  for MPI objects but adds the CUDA object only to `LOCAL_CORE_OBJS`.
+  [kmer.cpp](../../native/src/kmer.cpp) then references `count_kmers_gpu` in MPI objects.
+- Workaround: Build the CUDA `local` target as shown in
+  [Contributing](../../CONTRIBUTING.md#validate). Use `mpi-clang` for CPU MPI builds.
+- Resolution scope: Correct the MPI CUDA link dependencies and validate a clean
+  build with both backends available. This environment-manifest change does not
+  include that repair or a combined-backend build test.
+
 ## MON-001 Terminal native errors
 
 - Status: Open, observed 2026-11-01.
